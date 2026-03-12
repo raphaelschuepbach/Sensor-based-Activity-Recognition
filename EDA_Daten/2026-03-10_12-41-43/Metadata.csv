@@ -1,0 +1,2 @@
+version,device name,recording epoch time,recording time,recording timezone,platform,appVersion,device id,sensors,sampleRateMs,standardisation,platform version
+3,SM-S937B,1773146503782,2026-03-10_12-41-43,Europe/Zurich,android,1.54.1,8210bda8-2c59-41de-97ec-324b77b90149,Accelerometer|Gravity|Gyroscope|Orientation|Annotation|TotalAcceleration|GyroscopeUncalibrated|AccelerometerUncalibrated,8.333333333333334|8.333333333333334|8.333333333333334|8.333333333333334||8.333333333333334|8.333333333333334|8.333333333333334,false,36
