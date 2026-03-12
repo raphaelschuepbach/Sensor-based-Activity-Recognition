@@ -1,2 +1,0 @@
-version,device name,recording epoch time,recording time,recording timezone,platform,appVersion,device id,sensors,sampleRateMs,standardisation,platform version
-3,ThinkPhone 25 by motorola,1772534567701,2026-03-03_10-42-47,Europe/Zurich,android,1.54.0,219271cf-9fcc-4fb2-b43d-3676d1c822b2,Accelerometer|Gravity|Gyroscope|Orientation|Annotation|TotalAcceleration|GyroscopeUncalibrated|AccelerometerUncalibrated,10|10|10|10||10|10|10,false,35
