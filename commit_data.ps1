@@ -7,8 +7,8 @@ dvc add Daten
 
 Write-Host "Adding Git files..."
 git add Daten.dvc
-git add .dvc/config
 git add .gitignore
+# git add .dvc/config  <-- NICHT mehr hinzufügen
 
 Write-Host "Committing..."
 git commit -m $msg
