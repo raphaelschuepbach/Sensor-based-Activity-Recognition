@@ -9,8 +9,8 @@ dvc add Daten
 
 # --- Git Änderungen hinzufügen ---
 Write-Host "Adding Git files..."
-# Alle PS-Scripts + DVC Metadaten + .gitignore
-git add *.ps1
+# Alles + DVC Metadaten + .gitignore
+git add .
 git add Daten.dvc
 git add .gitignore
 

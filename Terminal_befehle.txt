@@ -1,0 +1,5 @@
+Daten Pull:
+.\pull_data.ps1
+
+Daten Commit&Push:
+.\commit_and_push.ps1 -msg "EIGENER TEXT" -remote storage_local
