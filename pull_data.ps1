@@ -5,10 +5,10 @@ param(
 Write-Host "Pulling latest Git changes..."
 git pull
 
-Write-Host "Syncing workspace to DVC state..."
-dvc checkout   # ← NEU: Stellt sicher dass Löschungen übernommen werden
-
 Write-Host "Pulling latest DVC data from remote..."
-dvc pull -r $remote
+dvc pull -r $remote        # ← erst Daten holen
+
+Write-Host "Syncing workspace to DVC state..."
+dvc checkout --force       # ← dann Workspace anpassen (inkl. Löschungen!)
 
 Write-Host "Done. Your data should now be up-to-date!"
