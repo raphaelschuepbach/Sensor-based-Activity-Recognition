@@ -4,7 +4,6 @@ param(
 )
 
 Write-Host "Adding DVC changes..."
-dvc gc -w                  # ← Löschungen aus Cache entfernen
 dvc add Daten
 
 Write-Host "Adding Git files..."
