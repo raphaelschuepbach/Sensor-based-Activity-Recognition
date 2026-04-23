@@ -1,3 +1,4 @@
 /Daten
 .dvc/config
 /Check_data
+/Model_Notebooks/wandb
