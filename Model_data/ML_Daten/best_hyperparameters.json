@@ -1,11 +1,10 @@
 {
   "best_params": {
-    "l2_regularization": 0.0094,
-    "learning_rate": 0.1766,
-    "max_depth": 6,
-    "max_iter": 885,
-    "max_leaf_nodes": 38,
-    "min_samples_leaf": 36
+    "class_weight": "balanced_subsample",
+    "max_depth": 24,
+    "max_features": "log2",
+    "min_samples_leaf": 3,
+    "n_estimators": 211
   },
-  "best_cv_score_macro_f1": 0.9836
+  "best_cv_score_macro_f1": 0.9608415351824517
 }
