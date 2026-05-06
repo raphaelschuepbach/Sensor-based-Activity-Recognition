@@ -2,4 +2,4 @@
 .dvc/config
 /Check_data
 /Model_Notebooks/wandb
-/Model_data/merged_df_50Hz.parquet
+/Model_data\merged_df_50Hz.parquet
