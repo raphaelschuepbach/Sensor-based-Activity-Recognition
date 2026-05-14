@@ -1,0 +1,10 @@
+{
+  "best_params": {
+    "class_weight": "balanced",
+    "max_depth": 26,
+    "max_features": "sqrt",
+    "min_samples_leaf": 2,
+    "n_estimators": 443
+  },
+  "best_cv_score_macro_f1": 0.9619881028261194
+}
