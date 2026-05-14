@@ -1,0 +1,9 @@
+{
+  "best_params": {
+    "C": 339.2699327922514,
+    "class_weight": "balanced",
+    "gamma": 0.002270487755790924,
+    "kernel": "rbf"
+  },
+  "best_cv_score_macro_f1": 0.9772386477565886
+}

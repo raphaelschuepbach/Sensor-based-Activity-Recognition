@@ -1,0 +1,12 @@
+{
+  "best_params": {
+    "class_weight": "balanced",
+    "l2_regularization": 6.873211713642722e-06,
+    "learning_rate": 0.1131225105716033,
+    "max_bins": 63,
+    "max_depth": 7,
+    "max_iter": 317,
+    "min_samples_leaf": 14
+  },
+  "best_cv_score_macro_f1": 0.9896141026652089
+}
