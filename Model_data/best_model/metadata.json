@@ -1,0 +1,27 @@
+{
+  "model_name": "CNN1D_Residual_100WS",
+  "model_file": "CNN1D_Residual_v7_final.pth",
+  "model_kind": "torch",
+  "window_size": 100,
+  "feature_input": "raw_windows",
+  "classes": [
+    "Auto",
+    "Laufen",
+    "Lift",
+    "Roundkick",
+    "Treppe",
+    "Velo",
+    "Zug"
+  ],
+  "metrics": {
+    "accuracy": 0.8473167044595616,
+    "f1_macro": 0.7945192896043263,
+    "f1_weighted": 0.8503855025386742,
+    "precision": 0.800245304313081,
+    "recall": 0.7937110216450661
+  },
+  "ci_95": {
+    "low": 0.7789937044207826,
+    "high": 0.8080458337838199
+  }
+}
