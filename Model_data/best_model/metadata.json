@@ -4,6 +4,7 @@
   "model_kind": "torch",
   "window_size": 100,
   "feature_input": "raw_windows",
+  "architecture": "CNN1D_Residual",
   "classes": [
     "Auto",
     "Laufen",
