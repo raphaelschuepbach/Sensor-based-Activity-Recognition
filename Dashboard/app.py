@@ -25,7 +25,7 @@ import streamlit as st
 # ============================================================
 # CONFIG
 # ============================================================
-BEST_MODEL_DIR = Path(__file__).resolve().parent.parent / "Model_data" / "best_model"
+BEST_MODEL_DIR = Path(__file__).resolve().parent.parent / "Modell" / "Bestes_Modell"
 META_PATH = BEST_MODEL_DIR / "metadata.json"
 
 SENSOR_LOGGER_IOS     = "https://apps.apple.com/app/sensor-logger/id1531582925"
@@ -295,12 +295,6 @@ st.markdown(
         font-size: 0.88rem;
         color: #e0e7ff;
         font-weight: 500;
-        transition: all 0.2s ease;
-    }
-    .activity-pill:hover {
-        background: rgba(99, 102, 241, 0.12);
-        border-color: rgba(99, 102, 241, 0.35);
-        transform: translateY(-1px);
     }
     .activity-pill .pill-icon {
         font-size: 1.05rem;
@@ -616,7 +610,7 @@ st.markdown(
       <span class="badge">SENSOR-BASED ACTIVITY RECOGNITION</span>
       <h1>Welche Bewegung war das?</h1>
       <p class="subtitle">Lade eine Sensor-Logger-Aufnahme hoch und erfahre,
-      welche von den 7 Aktivitäten du gemacht hast — basierend auf Beschleunigung,
+      welche von den 7 Aktivitäten du gemacht hast, basierend auf Beschleunigung,
       Rotation und Orientierung deines Geräts.</p>
       <div class="activity-row">{activity_pills_html}</div>
     </div>
@@ -658,7 +652,7 @@ st.markdown(
         <div class="step-number">3</div>
         <div class="step-title">Aufnahme machen</div>
         <div class="step-desc">
-          Telefon in die Hosen- oder Jackentasche stecken, egal in welcher Position, dann <b>Aufnahmen starten</b> drücken,
+          Handy in die Hosen- oder Jackentasche stecken, egal in welcher Position (Die besten Resultate erzielt man aber wenn das Handy mit der Kamera nach unten in die Hosentasche gesteckt wird), dann <b>Aufnahmen starten</b> drücken,
           einer der 7 Aktivitäten ausführen, danach auf <b>Aufn. beenden</b> drücken. Mindestens <b>10 Sekunden</b> —
           die ersten und letzten 3 s werden automatisch weggeschnitten.
         </div>
@@ -704,57 +698,95 @@ uploaded = st.file_uploader(
 # PIPELINE
 # ============================================================
 def render_signal_panels(merged: pd.DataFrame):
-    """3-Panel-Subplot: Accelerometer / Gyroscope / Orientation."""
+    """3-Panel-Subplot: Accelerometer / Gyroscope / Orientation.
+
+    Jedes Panel bekommt seine eigene horizontale Legende direkt darunter,
+    mit fest weisser Schrift (unabhaengig von Streamlit's Theme).
+    """
     time_axis = np.arange(len(merged)) / SAMPLING_HZ
+
     fig = make_subplots(
-        rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.07,
+        rows=3, cols=1, shared_xaxes=False, vertical_spacing=0.20,
         subplot_titles=[
             f"<b>{p['title']}</b> &nbsp;<span style='color:#94a3b8;font-weight:400'>{p['subtitle']}</span>"
             for p in SIGNAL_PANELS
         ],
     )
 
+    # Pro Subplot wird ein eigener Legende-Key verwendet (legend, legend2, legend3)
+    LEGEND_KEYS = ["legend", "legend2", "legend3"]
+
     for row, panel in enumerate(SIGNAL_PANELS, start=1):
+        legend_key = LEGEND_KEYS[row - 1]
         for col, label, color in zip(panel["cols"], panel["labels"], panel["colors"]):
             fig.add_trace(
                 go.Scatter(
                     x=time_axis, y=merged[col],
-                    mode="lines", name=f"{panel['title'][:3]} {label}",
+                    mode="lines", name=label,
                     line=dict(width=1.4, color=color),
-                    legendgroup=panel["title"],
+                    legend=legend_key,
                     showlegend=True,
                 ),
                 row=row, col=1,
             )
 
+    # Jedes Subplot hat ein eigenes Y-Domain. Wir lesen die Positionen der
+    # 3 Subplots aus und platzieren die Legenden jeweils direkt darunter.
+    # Plotly nummeriert die Y-Achsen: yaxis (=1), yaxis2 (=2), yaxis3 (=3)
+    # — jede hat ein `domain`-Tupel [bottom, top] in Paper-Koordinaten.
+    legend_style = dict(
+        orientation="h",
+        x=0.5, xanchor="center",
+        yanchor="top",
+        bgcolor="rgba(0,0,0,0)",
+        bordercolor="rgba(0,0,0,0)",
+        font=dict(family="Inter", color="#ffffff", size=12),
+    )
+
+    # Bei vertical_spacing=0.20: subplot-Hoehe = (1 - 2*0.20)/3 = 0.20
+    # subplot 1: y_domain = [0.80, 1.00]
+    # subplot 2: y_domain = [0.40, 0.60]
+    # subplot 3: y_domain = [0.00, 0.20]
+    # Legenden sitzen ~0.13 unter dem jeweiligen Subplot (Platz fuer X-Achsen-
+    # Beschriftung + "Zeit (s)"-Title oberhalb der Legende).
+    legend_positions = {
+        "legend":  0.67,    # unter subplot 1 (bottom = 0.80)
+        "legend2": 0.27,    # unter subplot 2 (bottom = 0.40)
+        "legend3": -0.13,   # unter subplot 3 (bottom = 0.00)
+    }
+
     fig.update_layout(
-        height=720,
+        height=820,
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Inter", color="#cbd5e1", size=12),
-        legend=dict(
-            orientation="h", yanchor="top", y=-0.05, x=0.5, xanchor="center",
-            bgcolor="rgba(0,0,0,0)",
-        ),
-        margin=dict(l=10, r=20, t=50, b=80),
+        font=dict(family="Inter", color="#ffffff", size=12),
+        legend  = dict(**legend_style, y=legend_positions["legend"]),
+        legend2 = dict(**legend_style, y=legend_positions["legend2"]),
+        legend3 = dict(**legend_style, y=legend_positions["legend3"]),
+        margin=dict(l=10, r=20, t=50, b=70),
         hovermode="x unified",
     )
+
     fig.update_xaxes(
         gridcolor="rgba(148,163,184,0.10)", zeroline=False,
         showline=True, linecolor="rgba(148,163,184,0.20)",
+        title_text="Zeit (s)",
+        title_font=dict(color="#ffffff"),
+        tickfont=dict(color="#ffffff"),
     )
     fig.update_yaxes(
         gridcolor="rgba(148,163,184,0.10)", zeroline=True,
         zerolinecolor="rgba(148,163,184,0.18)",
         showline=True, linecolor="rgba(148,163,184,0.20)",
+        tickfont=dict(color="#ffffff"),
+        title_font=dict(color="#ffffff"),
     )
-    # Subplot-Titel-Styling
+    # Subplot-Titel links-buendig
     for ann in fig["layout"]["annotations"]:
         ann["x"] = 0
         ann["xanchor"] = "left"
         ann["font"] = dict(size=14, color="#e0e7ff")
 
-    fig.update_xaxes(title_text="Zeit (s)", row=3, col=1)
     return fig
 
 
@@ -766,11 +798,11 @@ if uploaded is not None:
         zip_path.write_bytes(uploaded.getbuffer())
 
         with st.status("Verarbeite Sensordaten…", expanded=True) as status:
-            st.write("📦  ZIP entpacken")
+            st.write("ZIP entpacken")
             with zipfile.ZipFile(zip_path) as zf:
                 zf.extractall(tmp)
 
-            st.write("🌀  Sensoren laden & auf 50 Hz resampeln")
+            st.write("Sensoren laden & auf 50 Hz resampeln")
             try:
                 merged = load_and_resample(tmp)
             except FileNotFoundError as e:
@@ -781,7 +813,7 @@ if uploaded is not None:
             raw_duration = len(merged) / SAMPLING_HZ
             st.write(f"   Aufnahme: **{raw_duration:.1f} s**, {len(merged)} Samples")
 
-            st.write(f"✂️  Trimmen — {TRIM_SECONDS} s an beiden Enden")
+            st.write(f"Trimmen — {TRIM_SECONDS} s an beiden Enden")
             merged = trim_edges(merged)
             if merged.empty:
                 status.update(label="Aufnahme zu kurz", state="error")
@@ -795,7 +827,7 @@ if uploaded is not None:
 
             window_size = meta["window_size"] if meta else 100
             step_size   = window_size // 2
-            st.write(f"📐  Sliding Windows (size={window_size}, step={step_size})")
+            st.write(f"Sliding Windows (size={window_size}, step={step_size})")
             windows = make_windows(merged, window_size, step_size)
             if len(windows) == 0:
                 status.update(label="Zu wenig Samples für ein Fenster", state="error")
@@ -803,7 +835,7 @@ if uploaded is not None:
                 st.stop()
             st.write(f"   {len(windows)} Fenster erzeugt")
 
-            st.write("🤖  Modell-Inferenz")
+            st.write("Modell-Inferenz")
             preds, probas, classes = predict_windows(windows, model, kind, meta)
 
             vote_counts = Counter(preds)
