@@ -51,9 +51,10 @@ Die Aufzeichnungen umfassen drei Sensoren: **Accelerometer**, **Gyroscope** und 
 
 ### Was wir bewusst nicht abdecken
 
-- Ausschliesslich **Smartphone-Daten** — keine Wearable- oder externen Sensoren.
+- Ausschliesslich **Smartphone-Daten**, keine Wearable- oder externen Sensoren.
 - Fokus auf einem **funktionalen Dashboard**, nicht auf maximaler Modell-Optimierung (Modelle werden verglichen und tunend verbessert, aber nicht erschöpfend optimiert).
 - Das Dashboard klassifiziert **nur den aktuellen Bewegungstyp**, sagt keine zukünftigen Bewegungen vorher.
+- Es wird explizit **nicht auf Personenen** unterschieden, sondern nur Bewegungsart. 
 
 ### Optionale Ziele
 
@@ -83,7 +84,7 @@ Die Aufzeichnungen umfassen drei Sensoren: **Accelerometer**, **Gyroscope** und 
 Die Modell-Leistung wird primär anhand des **Macro-F1-Scores** beurteilt. Begründung:
 
 - Wir gehen von **ungleichen Klassen-Anzahlen** aus (manche Bewegungstypen sind einfacher aufzuzeichnen als andere).
-- Macro-F1 gewichtet alle Klassen gleich → eine seltene Klasse wie *Roundkick* zählt gleich viel wie eine häufige wie *Auto*.
+- Macro-F1 gewichtet alle Klassen gleich -> eine seltene Klasse wie *Roundkick* zählt gleich viel wie eine häufige wie *Auto*.
 - Reine Accuracy oder der gewichtete F1 würden den Score-Vorteil der Mehrheitsklasse(n) zu stark belohnen.
 
 ### Zielwert: ~85 % Macro-F1
@@ -96,18 +97,19 @@ Begründung aus dem Konzept:
 
 Über reine Punktschätzer hinaus wird im [`Model_Vergleich.ipynb`](Model_Notebooks/Model_Vergleich.ipynb) ein **statistisch belastbarer Vergleich** durchgeführt:
 
-1. **Author-disjunkter 80/20-Split** pro Tag — keine Person im Train *und* im Test eines Tags → die Test-Performance misst Generalisierung auf **unbekannte Personen**, nicht nur auf unbekannte Aufnahmen.
-2. **Bootstrap-Konfidenzintervalle** (B = 1000, paired) für F1-Macro pro Modell → quantifiziert die Unsicherheit der Punktschätzer.
-3. **McNemar's Test** paarweise zwischen Modellen mit identischem Test-Set → formaler Hypothesentest auf Discordant Pairs.
-4. **Holm-Bonferroni-Korrektur** der paarweisen p-Werte → kontrolliert die Family-Wise Error Rate bei 21 Paarvergleichen.
+1. **Author-disjunkter 80/20-Split** pro Tag, keine Person ist im Train *und* im Test eines Tags (einer Bewegungsart) -> die Test-Performance misst Generalisierung auf **unbekannte Personen**, nicht nur auf unbekannte Aufnahmen.
+2. **Bootstrap-Konfidenzintervalle** (B = 1000, paired) für F1-Macro pro Modell -> quantifiziert die Unsicherheit der Punktschätzer.
+3. **McNemar's Test** paarweise zwischen Modellen mit identischem Test-Set -> formaler Hypothesentest auf Discordant Pairs.
+4. **Holm-Bonferroni-Korrektur** der paarweisen p-Werte -> kontrolliert die Family-Wise Error Rate bei 21 Paarvergleichen.
 
 
 Zusätzlich pro Modell: **Confusion Matrix**, **Per-Klassen-F1**, **Precision/Recall** macro-averaged.
 
-### Tooling
+### Tools
 
 - **Weights & Biases** (`wandb.ai`) trackt sämtliche DL-Trainingsläufe inklusive Hyperparameter, Loss-Verläufe, Val-Metriken und Modell-Artefakte.
 - ML-Hyperparameter-Suche: `RandomizedSearchCV` mit 5-facher Stratified K-Fold-CV, Score = Macro-F1.
+- DL-Hyperparameter-Suche: `GroupKFold` auf IDs der Aufnahmen geteilt für 5-Fold-CV. Die Sliding Windows einer Aufnahme sind alle im gleichen Fold. Somit konnte das Dataleakage verringert werden, auch wenn die Personen immer noch die gleichen sind. 
 
 ---
 
@@ -122,19 +124,20 @@ Stand Ende der Modellierungsphase:
 | ML-Modell trainiert | ≥ 1 | **6** (RF/HGB/SVM × 50WS/100WS) |
 | DL-Modell trainiert | ≥ 1 | **2** (CNN1D Residual, BiLSTM) |
 | Macro-F1 (bestes Modell) | ≈ 0.85 | **0.795** (CNN1D Residual 100WS) |
-| Statistisch belegter Modellvergleich | gewünscht | ✅ McNemar + Holm-Bonferroni|
-| wandb-Tracking | ja | ✅ alle DL-Läufe |
-| Funktionierendes Dashboard | ja | ✅ Streamlit, läuft mit Live-Inferenz |
-| Manuelle Datentrim | ja | ✅ ±3 s automatisch (in `merge_data.ipynb`) |
-| Reproduzierbares Repo + Dokumentation | ja | ✅ DVC + Poetry + README |
+| Statistisch belegter Modellvergleich | gewünscht | McNemar + Holm-Bonferroni|
+| wandb-Tracking | Ja | alle DL-Läufe |
+| Funktionierendes Dashboard | Ja | Streamlit, läuft mit Live-Inferenz |
+| Manuelles Datentrimming | Ja | 3s automatisch an Anfang und Ende (in `merge_data.ipynb`) |
+| Reproduzierbares Repo + Dokumentation | Ja | DVC + Poetry + README |
 
-**Diskussion:** Das 85 %-Ziel wurde mit 79.5 % knapp verfehlt — wahrscheinliche Ursachen:
+**Diskussion:** Das 85 %-Ziel wurde mit 79.5 % knapp verfehlt, mögliche Gründe dafür können sein:
 
-- **Verwechslungs-Klassen** wie Zug ↔ Auto (im Konzept explizit als Risiko genannt) sind im Confusion-Matrix-Plot deutlich sichtbar. Ebenfalls bei den Klassen Treppe ↔ Auto
+- **Verwechslungs-Klassen** wie Zug <-> Auto (im Konzept explizit als Risiko genannt) sind im Confusion-Matrix-Plot deutlich sichtbar. Ebenfalls bei den Klassen Treppe <-> Velo gab es Probleme diese auseiander zu halten. Grund dafür könnte die ähnliche Bewegung der Beine sein, welche durch das Handy in der Hosentasche aufgenommen wird. 
 - **Author-disjunkter Test-Split** ist strenger als ein klassischer ID-basierter Split: das Modell sieht im Test ausschliesslich Personen, deren Geh-/Fahr-/Lift-Stil es im Training **nie** gesehen hat. 
-- **Klassen-Imbalance:** Roundkick hat deutlich weniger Aufnahmen als Auto/Velo → der Macro-F1 wird vom schwächsten Klassen-Score nach unten gezogen.
+- **Klassen-Imbalance:** Roundkick hat deutlich weniger Aufnahmen als Auto/Velo -> der Macro-F1 wird vom schwächsten Klassen-Score nach unten gezogen. Roundkick konte trotzdem gut erkannt werden, wahrscheinlich auf Grund der klaren Differenz zu allen anderen Klassen. Ähnliche Klassen (siehe oben) waren auch mit mehr Daten schwieriger.
+- **Wenig Daten:** Im Rahmen dieser Challenge wurden zahlreiche Daten aufgenommen, jedoch ist die Anzahl von 827 Aufnahmen für die Erstellung eines Deep-Learning-Modells eher gering. Selbst mit dem Sliding Window werden schnell die Grenzen erreicht. 
 
-Das 95 %-CI für das Best-Model liegt bei **[0.779, 0.808]** — die wahre Generalisierungs-F1 für vergleichbare neue Personen ist mit 95 % Konfidenz in diesem Bereich.
+Das 95%-CI für das Best-Model liegt bei **[0.779, 0.808]**, somit ist die wahre Generalisierungs-F1 für vergleichbare neue Personen mit 95 % Konfidenz in diesem Bereich, was auch die untere Grenze der anderen Projekten ist. 
 
 ---
 
@@ -163,6 +166,8 @@ Am Ende der Challenge wird ausgeliefert:
 | 🚶 | **Laufen** | Gehen |
 | 🥋 | **Roundkick** | Round-Kick (Karate) |
 
+Die Icons werden auch so auf dem Dashboard verwendet. 
+
 ---
 
 ## Daten-Übersicht
@@ -172,18 +177,18 @@ Am Ende der Challenge wird ausgeliefert:
 | Proband | Aufnahmen |
 |---|---:|
 | Jessica Schmid | 490 |
-| Renate | 161 |
+| Renate Schmid | 161 |
 | Silas Tschopp | 129 |
 | Raphael Schüpbach | 37 |
-| Tobias | 10 |
+| Tobias Buess | 10 |
 | **Total** | **827** |
 
 Jede Aufnahme enthält:
-- **Accelerometer** (x, y, z) — Linearbeschleunigung [m/s²]
-- **Gyroscope** (x, y, z) — Winkelgeschwindigkeit [rad/s]
-- **Orientation** (qx, qy, qz, qw, roll, pitch, yaw) — Quaternion + Euler-Winkel
+- **Accelerometer** (x, y, z) Linearbeschleunigung [m/s²]
+- **Gyroscope** (x, y, z) Winkelgeschwindigkeit [rad/s]
+- **Orientation** (qx, qy, qz, qw, roll, pitch, yaw) Quaternion + Euler-Winkel
 
-Datenträger: **DVC** mit lokalem Remote `storage_local`. Die rohen `Daten/`-Ordner sind nicht in Git; Git tracked nur `Daten.dvc` mit dem Hash.
+**Datenträger:** *DVC* mit lokalem Remote `storage_local`. Die rohen `Daten/`-Ordner sind nicht in Git. Git tracked nur das `Daten.dvc` Dokument mit dem Hash.
 
 ---
 
@@ -209,13 +214,14 @@ Datenträger: **DVC** mit lokalem Remote `storage_local`. Die rohen `Daten/`-Ord
                        │ Model_Notebooks/Model_Vorbereitung.ipynb
                        │ - Author-disjunkter 80/20-Split pro Tag
                        │ - Sliding Windows (50 oder 100 Samples, step=50%)
+                       | - ID mitgabe für CV in DL
                        ▼
 ┌──────────────────────────────────────────────────────┐
 │  Model_data/                                         │
-│    train_split1_<WS>WS.npz  (X: N x WS x 13)         │
-│    test_split1_<WS>WS.npz                            │
+│    train_split1_<WS>WS_cv.npz  (X: N x WS x 13)      │
+│    test_split1_<WS>WS_cv.npz                         │
 └──────────────────────────────────────────────────────┘
-                       │
+                       │ - Model_Notebooks
         ┌──────────────┴──────────────┐
         │                             │
         ▼ Feature-Engineering         ▼ Raw-Tensoren
